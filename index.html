@@ -1,1 +1,249 @@
-Hello github pages!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TestRail proof-of-concept plugin that uses 3rd party back-end">
+    <meta name="author" content="Paul &quot;Actine&quot; Danyliuk">
+
+    <title>TestRail plugin demo</title>
+
+    <link href="/bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+    <link href="/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="lodash.custom.min.js"></script>
+    <script src="/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+
+    <script src="main.js"></script>
+
+    <!--[if lt IE 10]>
+    <script type="application/javascript">
+        alert('This demo might not work with your browser (IE 8 and below)')
+    </script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="container" style="margin-bottom: 16px; padding-top: 20px">
+
+    <h1 id="greeting">Hi!</h1>
+
+    <p class="lead">
+        This example demonstrates how separately hosted 3rd party web-apps can be seamlessly integrated into TestRail.
+    </p>
+    <p >
+        The plugin will recreate an &ldquo;Add test case&rdquo; form according to your setup
+        and allow you to create a new test case. Since this is just a proof of concept, there's no corner case handling,
+        no validation, only three steps (if you use separate steps mode), the code is horrid, and things may break painfully.
+    </p>
+    <p>
+        I don't collect any data &mdash; this page communicates with nothing but your TestRail (or at least not under my governance).
+    </p>
+
+    <div id="form-container" style="display:none">
+
+        <h2 style="margin-top: 42px">Add test case</h2>
+
+        <form action="#">
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input name="title" type="text" class="form-control" id="title" maxlength="250" required="true">
+            </div>
+            <div class="row bg-info" id="top-fields" style="padding-top: 12px; padding-bottom: 1px; margin-bottom: 16px">
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="section_id">Section *</label>
+                        <select name="section_id" id="section_id" class="form-control">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="type_id">Type *</label>
+                        <select name="type_id" id="type_id" class="form-control">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="priority_id">Priority *</label>
+                        <select name="priority_id" id="priority_id" class="form-control">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="estimate">Estimate</label>
+                        <input name="estimate" type="text" class="form-control" id="estimate" maxlength="250">
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="milestone_id">Milestone</label>
+                        <select name="milestone_id" id="milestone_id" class="form-control">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label for="refs">References</label>
+                        <input name="refs" type="text" class="form-control" id="refs" maxlength="250">
+                    </div>
+                </div>
+
+                <!-- Place for top fields -->
+
+            </div>
+
+            <div id="bottom-fields">
+
+                <!-- Place for bottom fields -->
+
+            </div>
+
+            <button type="submit" class="btn btn-primary pull-right">Save and close</button>
+        </form>
+
+    </div>
+
+    <div class="alert alert-info" role="alert" id="loading" style="margin-top: 42px">Loading</div>
+
+    <div class="alert alert-warning" role="alert" id="warning" style="display:none; margin-top: 42px"></div>
+
+</div>
+
+<!-- --------------------------------------------------- TEMPLATES ------------------------------------------------- -->
+
+<script id="tpl-field-string" type="text/template">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="form-group" <% if (!!description) { %>title="<%- description %>"<% } %> >
+            <label for="<%= system_name %>">
+                <%- label %> <% if (options.is_required) { print('*'); } %>
+            </label>
+            <input name="<%= system_name %>" type="text" class="form-control" id="<%= system_name %>"
+                   maxlength="250" value="<%- options.default_value %>" <% if (options.is_required) { print('required="required"'); } %> >
+        </div>
+    </div>
+</script>
+
+<script id="tpl-field-integer" type="text/template">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="form-group" <% if (!!description) { %>title="<%- description %>"<% } %> >
+            <label for="<%= system_name %>">
+                <%- label %> <% if (options.is_required) { print('*'); } %>
+            </label>
+            <input name="<%= system_name %>" type="number" class="form-control" id="<%= system_name %>"
+                   value="<%= options.default_value %>" <% if (options.is_required) { print('required="required"'); } %>>
+        </div>
+    </div>
+</script>
+
+<script id="tpl-field-url" type="text/template">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="form-group" <% if (!!description) { %>title="<%- description %>"<% } %> >
+            <label for="<%= system_name %>">
+            <%- label %> <% if (options.is_required) { print('*'); } %>
+            </label>
+            <input name="<%= system_name %>" type="url" class="form-control" id="<%= system_name %>"
+                   maxlength="250" value="<%- options.default_value %>" <% if (options.is_required) { print('required="required"'); } %> >
+        </div>
+    </div>
+</script>
+
+<script id="tpl-field-checkbox" type="text/template">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="form-group">
+            <label for="<%= system_name %>"><%- label %> <% if (options.is_required) { print('*'); } %> </label>
+            <div class="checkbox">
+                <label>
+                    <input name="<%= system_name %>" type="checkbox" id="<%= system_name %>" <% if (options.default_value != '0') { print(' checked="checked"') } %> >
+                    <%- description %>
+                </label>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script id="tpl-field-dropdown" type="text/template">
+    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="form-group" <% if (!!description) { %>title="<%- description %>"<% } %> >
+            <label for="<%= system_name %>">
+            <%- label %> <% if (options.is_required) { print('*'); } %>
+            </label>
+            <select name="<%= system_name %>" id="<%= system_name %>" class="form-control">
+            </select>
+        </div>
+    </div>
+</script>
+
+<script id="tpl-field-text" type="text/template">
+    <div class="form-group">
+        <label for="<%= system_name %>"><%- label %> <% if (options.is_required) { print('*'); } %> </label>
+        <textarea name="<%= system_name %>" class="form-control" id="<%= system_name %>" rows="<%= options.rows %>"><%- options.default_value %></textarea>
+        <% if (!!description) { %>
+        <span class="help-block"><%- description %></span>
+        <% } %>
+    </div>
+</script>
+
+<script id="tpl-field-multiselect" type="text/template">
+    <div class="form-group">
+        <label for="<%= system_name %>"><%- label %> <% if (options.is_required) { print('*'); } %> </label>
+        <select name="<%= system_name %>" id="<%= system_name %>" class="form-control" multiple="multiple" size="5">
+        </select>
+        <% if (!!description) { %>
+        <span class="help-block"><%- description %></span>
+        <% } %>
+    </div>
+</script>
+
+<script id="tpl-field-steps" type="text/template">
+    <div class="form-group clearfix separate-steps" id="<%= system_name %>">
+        <label><%- label %> <% if (options.is_required) { print('*'); } %> </label>
+        <span class="help-block">Since this is just a demo, there's three separate steps for you &mdash; no adding/removing/reordering :-P</span>
+
+        <% for(var i = 1; i < 4; i++) { %>
+        <div class="separate-step row" style="padding: 15px 0; background-color: #f0f0f0; margin-bottom: 8px">
+            <div class="col-xs-1">
+                <p class="lead bg-info text-center"><%= i %></p>
+            </div>
+            <div class="col-xs-11">
+
+                <div class="row">
+                    <div class="col-xs-12 <% if (options.has_expected) { print('col-md-6') } %>">
+                        <textarea class="form-control step-description" rows="<%= options.rows %>" placeholder="Step Description"><%- ee[i].content %></textarea>
+                    </div>
+                    <% if (options.has_expected) { %>
+                    <div class="col-xs-12 col-md-6">
+                        <p class="visible-xs visible-sm" style="margin-top: 16px">Expected result</p>
+                        <textarea class="form-control step-result" rows="<%= options.rows %>" placeholder="Expected Result"><%- ee[i].expected %></textarea>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <% if (!!description) { %>
+        <span class="help-block"><%- description %></span>
+        <% } %>
+
+    </div>
+</script>
+
+<!-- ------------------------------------------------- END TEMPLATES ----------------------------------------------- -->
+
+<script>
+    App.start();
+</script>
+
+</body>
+</html>
