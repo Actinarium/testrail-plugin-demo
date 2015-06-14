@@ -36,7 +36,7 @@
     <p >
         The plugin will recreate an &ldquo;Add test case&rdquo; form according to your setup
         and allow you to create a new test case. Since this is just a proof of concept, there's no corner case handling,
-        no validation, only three steps (if you use separate steps mode), the code is horrid, and things may break painfully.
+        only primitive validation, the code is horrid, and things may break painfully.
     </p>
     <p>
         I don't collect any data &mdash; this page communicates with nothing but your TestRail (or at least not under my governance).
@@ -187,7 +187,8 @@
 <script id="tpl-field-text" type="text/template">
     <div class="form-group">
         <label for="<%= system_name %>"><%- label %> <% if (options.is_required) { print('*'); } %> </label>
-        <textarea name="<%= system_name %>" class="form-control" id="<%= system_name %>" rows="<%= options.rows %>"><%- options.default_value %></textarea>
+        <textarea name="<%= system_name %>" class="form-control" id="<%= system_name %>" rows="<%= options.rows %>"
+        <% if (options.is_required) { print('required="required"'); } %> ><%- options.default_value %></textarea>
         <% if (!!description) { %>
         <span class="help-block"><%- description %></span>
         <% } %>

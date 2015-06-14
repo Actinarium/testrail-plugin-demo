@@ -6,6 +6,7 @@
 
   var hostWindow;
   var hostOrigin = '*';
+  var pageBase = 'index.php?';
   var dateFormat;
 
   var timer;
@@ -103,6 +104,7 @@
         hostWindow = event.source;
         hostOrigin = data.host;
         dateFormat = data.dateFormat;
+        pageBase = data.pageBase;
 
         $('#greeting').text("Hi, " + data.user.name + "!");
 
@@ -118,16 +120,16 @@
       case 'save_case_response' :
       {
         if (data.success) {
-          alert("Case saved. Click OK to reload the page");
-          close(true);
+          alert('Case #' + data.payload.id + ' saved!');
+          close(pageBase + '/cases/view/' + data.payload.id);
         } else {
-          alert("Saving case failed. Error: " + data.error);
+          alert('Saving case failed. Error: ' + data.payload.error);
         }
         break;
       }
       case 'detached' :
       {
-        close(false);
+        close();
         break;
       }
       default :
@@ -281,15 +283,14 @@
 
     } else {
       $('#loading').hide();
-      $('#warning').show().html('Plugin is not loaded within TestRail context. Go to <a href="https://discuss.gurock.com/">TestRail forums</a> and ask for Actine.');
+      $('#warning').show().html('Plugin is not loaded within TestRail context. Go to <a href="https://discuss.gurock.com/">TestRail forums</a> and ask for Actine.<br>You can still examine the code, even though it\'s pretty atrocious at the moment.');
     }
   };
 
-  var close = function (requestReload) {
-    console.info('Closing plugin', requestReload);
-    requestReload = requestReload || false;
+  var close = function (redirectTo) {
+    console.info('Closing plugin. Redirecting to: ' + redirectTo);
     window.removeEventListener('message', _handleMessage, false);
-    window.parent.postMessage({'type': 'detach', requestReload: requestReload}, hostOrigin);
+    window.parent.postMessage({'type': 'detach', redirectTo: redirectTo}, hostOrigin);
   };
 
   window.App = {
