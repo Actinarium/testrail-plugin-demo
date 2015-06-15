@@ -58,13 +58,15 @@
     var makeMilestoneField = function (field, milestones) {
       var $el = _makeTplField('#tpl-field-dropdown')(field);
       var $select = $el.find('select');
-      if (!field.options.is_required) {
-        $('<option value=""></option>').appendTo($select);
-      }
+
       // In reverse order, because they are displayed this way in TestRail
-      for (var i = milestones.length - 1; i >= 0; i--) {
-        $('<option value="' + milestones[i].id + '">' + milestones[i].name + '</option>').appendTo($select);
+      milestones.forEach(function (milestone) {
+        $('<option value="' + milestone.id + '">' + milestone.name + '</option>').prependTo($select);
+      });
+      if (!field.options.is_required) {
+        $('<option value=""></option>').prependTo($select);
       }
+
       $select.val(field.options.default_value);
       return $el;
     };
@@ -151,7 +153,7 @@
     });
 
     configs.types.forEach(function (type) {
-      $('<option value="' + type.id + '"' + (type.is_default ? ' selected="selected"' : '') + '>' + type.name + '</option>').prependTo($type);
+      $('<option value="' + type.id + '"' + (type.is_default ? ' selected="selected"' : '') + '>' + type.name + '</option>').appendTo($type);
     });
 
     configs.priorities.forEach(function (priority) {
