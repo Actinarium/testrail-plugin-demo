@@ -146,25 +146,22 @@
     var $priority = $('#priority_id');
     var $milestone = $('#milestone_id');
 
-    var i;
-
     configs.sections.forEach(function (section) {
       $('<option value="' + section.id + '">' + _.repeat('&nbsp;&nbsp;', section.depth) + section.name + '</option>').appendTo($section);
     });
 
-    configs.priorities.forEach(function (priority) {
-      $('<option value="' + priority.id + '"' + (priority.is_default ? ' selected="selected"' : '') + '>' + priority.name + '</option>').appendTo($priority);
+    configs.types.forEach(function (type) {
+      $('<option value="' + type.id + '"' + (type.is_default ? ' selected="selected"' : '') + '>' + type.name + '</option>').prependTo($type);
     });
 
-    // Types and milestones come in reverse order
-    for (i = configs.types.length - 1; i >= 0; i--) {
-      $('<option value="' + configs.types[i].id + '"' + (configs.types[i].is_default ? ' selected="selected"' : '') + '>' + configs.types[i].name + '</option>').appendTo($type);
-    }
+    configs.priorities.forEach(function (priority) {
+      $('<option value="' + priority.id + '"' + (priority.is_default ? ' selected="selected"' : '') + '>' + priority.name + '</option>').prependTo($priority);
+    });
 
-    $('<option value=""></option>').appendTo($milestone);
-    for (i = configs.milestones.length - 1; i >= 0; i--) {
-      $('<option value="' + configs.milestones[i].id + '">' + configs.milestones[i].name + '</option>').appendTo($milestone);
-    }
+    configs.milestones.forEach(function (milestone) {
+      $('<option value="' + milestone.id + '">' + milestone.name + '</option>').prependTo($milestone);
+    });
+    $('<option value=""></option>').prependTo($milestone);
 
     // Add custom fields
     var $topFields = $('#top-fields');
